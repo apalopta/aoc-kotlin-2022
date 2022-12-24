@@ -1,17 +1,27 @@
+import java.io.File
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        return input.size
-    }
 
-    fun part2(input: List<String>): Int {
-        return input.size
-    }
+    val input = getElvesProperties()
+    val sortedCaloriesDescending = input.map { it.sum() }.sortedDescending()
 
-    // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 1)
+    // part 1
+    sortedCaloriesDescending.sumOfTopN(1).println()
+    // part 2
+    sortedCaloriesDescending.sumOfTopN(3).println()
+}
 
-    val input = readInput("Day01")
-    part1(input).println()
-    part2(input).println()
+private fun List<Int>.sumOfTopN(n: Int): Int = take(n).sum()
+
+/** Returns the lists of calories per elf. */
+private fun getElvesProperties(): List<List<Int>> {
+    val nl = System.getProperty("line.separator")
+    val input = File("src/Day01.txt")
+        .readText()
+        .removeSuffix(nl)
+        .split("$nl$nl")
+        .map { properties -> properties.split(nl)
+            .map { property -> property.toInt() }
+        }
+    return input
 }
