@@ -2,13 +2,13 @@ import java.io.File
 
 val nl = System.getProperty("line.separator")!!
 
-val monkeys = mutableListOf<Monkey>()
+//val monkeys = mutableListOf<Monkey>()
 
 data class Monkey(
     val id: Int,
     val items: MutableList<Long>,
     val operation: (Long) -> Long,
-    val divisor: Long,
+    val divisor: Int,
     val trueMonkey: Int,
     val falseMonkey: Int,
     var totalChecks: Int = 0
@@ -17,15 +17,15 @@ data class Monkey(
         items.add(item)
     }
 
-    fun round(monkeys: List<Monkey>, worryLevelDivisor: Int = 3) {
-        val newValues = items.map { operation(it) }
-        items.clear()
-        items.addAll(newValues)
+    fun round(monkeys: List<Monkey>, worryLevelDivisor: Int, commonDiv: Int) {
         while (items.isNotEmpty()) {
             totalChecks++
-            val item = items.removeAt(0) / worryLevelDivisor
-            val receiver = if (item % divisor == 0.toLong()) monkeys[trueMonkey] else monkeys[falseMonkey]
-            receiver.receive(item)
+            val item = operation(items.removeFirst())
+            val newItem = (item / worryLevelDivisor.toLong()) % commonDiv
+            if (newItem % divisor == 0.toLong())
+                monkeys[trueMonkey].receive(newItem)
+            else
+                monkeys[falseMonkey].receive(newItem)
         }
     }
 }
@@ -35,57 +35,65 @@ fun main() {
     val input = readSplitInput()
 
     part1(input).println()
+
+    part2(input).println()
+}
+
+private fun part1(input: List<List<String>>): Long {
+    val (monkeys, commonDiv) = initMonkeys(input)
+    return doMonkeyRounds(monkeys.toList(), 20, 3, commonDiv)
+}
+
+private fun part2(input: List<List<String>>) {
+    val (monkeys, commonDiv) = initMonkeys(input)
+    doMonkeyRounds(monkeys.toList(), 10000, 1, commonDiv).println()
 }
 
 private fun readSplitInput(): List<List<String>> {
-    return File("src", "Day11_test.txt")
+    return File("src", "Day11.txt")
         .readText()
         .removeSuffix(nl)
         .split("$nl$nl")
         .map { it.split(nl).map { line -> line.trim() } }
 }
 
-fun part1(input: List<List<String>>): Int {
+fun initMonkeys(input: List<List<String>>): Pair<MutableList<Monkey>, Int> {
+    val monkeys = mutableListOf<Monkey>()
     input.forEachIndexed { i, monkeyDef ->
         monkeys.add(
             Monkey(
                 i,
                 monkeyDef[1].substringAfter(": ").split(',').map { it.trim().toLong() }.toMutableList(),
                 monkeyDef[2].parseOperation(),
-                monkeyDef[3].substringAfter("by ").trim().toLong(),
+                monkeyDef[3].substringAfter("by ").trim().toInt(),
                 monkeyDef[4].substringAfter("monkey ").trim().toInt(),
                 monkeyDef[5].substringAfter("monkey ").trim().toInt(),
             )
         )
     }
+    val commonDiv = monkeys.map { it.divisor }.reduce { a, b -> a * b }
 
-    monkeys.forEachIndexed { i, monkey ->
-        println("Monkey $i: ${monkey.items}")
-    }
-    repeat(20) { round ->
-        monkeys.forEachIndexed { i, monkey ->
-            monkey.round(monkeys)
-        }
-        println("Round ${round + 1}")
-        monkeys.forEachIndexed { i, monkey ->
-            println("Monkey $i: ${monkey.items}")
-        }
-        monkeys.forEach {
-            println("Monkey ${it.id} inspected ${it.totalChecks} items")
+
+    return monkeys to commonDiv
+}
+
+private fun doMonkeyRounds(monkeys: List<Monkey>, rounds: Int, worryLevelDivisor: Int, commonMult: Int): Long {
+    repeat(rounds) { _ ->
+        monkeys.forEach { monkey ->
+            monkey.round(monkeys, worryLevelDivisor, commonMult)
         }
     }
 
-    val top2Monkeys = monkeys.sortedByDescending { it.totalChecks }.toMutableList().take(2)
-    top2Monkeys.println()
+    val (m1, m2) = monkeys.sortedByDescending { it.totalChecks }.toMutableList().take(2)
 
-    return top2Monkeys[0].totalChecks * top2Monkeys[1].totalChecks
+    return (m1.totalChecks.toLong() * m2.totalChecks.toLong())
 }
 
 fun String.parseOperation(): (Long) -> Long {
     val (operator, value) = substringAfter("old ").split(' ')
     return when (operator) {
-        "*" -> if (value == "old") { it -> it * it } else { it -> it * value.trim().toLong() }
-        "+" -> if (value == "old") { it -> it + it } else { it -> it + value.trim().toLong() }
+        "*" -> { it -> it * (if (value == "old") it else value.trim().toLong()) }
+        "+" -> { it -> it + (if (value == "old") it else value.trim().toLong()) }
         else -> error("unknown Operation $this")
     }
 }
