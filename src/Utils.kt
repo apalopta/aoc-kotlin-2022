@@ -2,11 +2,22 @@ import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 
+val nl = System.getProperty("line.separator")!!
+
 /**
  * Reads lines from the given input txt file.
  */
 fun readInput(name: String) = File("src", "$name.txt")
     .readLines()
+
+
+fun readSplitInput(name: String): List<List<String>> {
+    return File("src", "$name.txt")
+        .readText()
+        .removeSuffix(nl)
+        .split("$nl$nl")
+        .map { it.split(nl).map { line -> line.trim() } }
+}
 
 /**
  * Converts string to md5 hash.

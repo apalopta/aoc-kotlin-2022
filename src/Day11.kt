@@ -1,9 +1,3 @@
-import java.io.File
-
-val nl = System.getProperty("line.separator")!!
-
-//val monkeys = mutableListOf<Monkey>()
-
 data class Monkey(
     val id: Int,
     val items: MutableList<Long>,
@@ -31,33 +25,18 @@ data class Monkey(
 }
 
 fun main() {
+    val input = readSplitInput("Day11")
 
-    val input = readSplitInput()
-
-    part1(input).println()
-
-    part2(input).println()
+    var monkeys = initMonkeys(input)
+    val commonDiv = monkeys.map { it.divisor }.reduce { a, b -> a * b }
+    // part1
+    doMonkeyRounds(monkeys, commonDiv, 3, 20).println()
+    // part2
+    monkeys = initMonkeys(input)
+    doMonkeyRounds(monkeys, commonDiv, 1, 10000).println()
 }
 
-private fun part1(input: List<List<String>>): Long {
-    val (monkeys, commonDiv) = initMonkeys(input)
-    return doMonkeyRounds(monkeys.toList(), 20, 3, commonDiv)
-}
-
-private fun part2(input: List<List<String>>) {
-    val (monkeys, commonDiv) = initMonkeys(input)
-    doMonkeyRounds(monkeys.toList(), 10000, 1, commonDiv).println()
-}
-
-private fun readSplitInput(): List<List<String>> {
-    return File("src", "Day11.txt")
-        .readText()
-        .removeSuffix(nl)
-        .split("$nl$nl")
-        .map { it.split(nl).map { line -> line.trim() } }
-}
-
-fun initMonkeys(input: List<List<String>>): Pair<MutableList<Monkey>, Int> {
+private fun initMonkeys(input: List<List<String>>): List<Monkey> {
     val monkeys = mutableListOf<Monkey>()
     input.forEachIndexed { i, monkeyDef ->
         monkeys.add(
@@ -71,16 +50,14 @@ fun initMonkeys(input: List<List<String>>): Pair<MutableList<Monkey>, Int> {
             )
         )
     }
-    val commonDiv = monkeys.map { it.divisor }.reduce { a, b -> a * b }
 
-
-    return monkeys to commonDiv
+    return monkeys.toList()
 }
 
-private fun doMonkeyRounds(monkeys: List<Monkey>, rounds: Int, worryLevelDivisor: Int, commonMult: Int): Long {
+private fun doMonkeyRounds(monkeys: List<Monkey>, commonDiv: Int, worryLevelDivisor: Int, rounds: Int): Long {
     repeat(rounds) { _ ->
         monkeys.forEach { monkey ->
-            monkey.round(monkeys, worryLevelDivisor, commonMult)
+            monkey.round(monkeys, worryLevelDivisor, commonDiv)
         }
     }
 
@@ -89,7 +66,7 @@ private fun doMonkeyRounds(monkeys: List<Monkey>, rounds: Int, worryLevelDivisor
     return (m1.totalChecks.toLong() * m2.totalChecks.toLong())
 }
 
-fun String.parseOperation(): (Long) -> Long {
+private fun String.parseOperation(): (Long) -> Long {
     val (operator, value) = substringAfter("old ").split(' ')
     return when (operator) {
         "*" -> { it -> it * (if (value == "old") it else value.trim().toLong()) }
