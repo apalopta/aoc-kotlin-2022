@@ -3,49 +3,54 @@ import kotlin.math.pow
 fun main() {
     val input = readInput("Day25")
 
-    part1(input).println()
-}
-
-private fun part1(input: List<String>): String {
-    return input.sumOf { line -> line.toDec() }.toSnafu()
+    // part1
+    input.sumOf { line -> line.toDec() }.toSnafu().println()
 }
 
 infix fun Int.pow(i: Int) = toDouble().pow(i.toDouble()).toLong()
 
-val snafuToDecMap = mapOf(
-    '1' to 1,
-    '2' to 2,
-    '0' to 0,
-    '-' to -1,
-    '=' to -2
-)
+private fun Char.toSnafuDigit() = when (this) {
+    '1' -> 1
+    '2' -> 2
+    '0' -> 0
+    '-' -> -1
+    '=' -> -2
+    else -> error("unknown character for SNAFU: $this")
+}
 
-val decToSnafuMap = mapOf(
-    -2 to "=",
-    -1 to "-",
-    2 to "2",
-    1 to "1",
-    0 to "0",
-)
+private fun Int.toSnafuChar() = when (this) {
+    -2 -> '='
+    -1 -> '-'
+    2 -> '2'
+    1 -> '1'
+    0 -> '0'
+    else -> error("unknown digit for SNAFU: $this")
+}
+
+private fun Int.toSnafuRemainder() = when (this) {
+    4 -> -1
+    3 -> -2
+    2 -> 2
+    1 -> 1
+    0 -> 0
+    else -> error("unknown remainder for SNAFU $this")
+}
 
 fun String.toDec(): Long =
-    toCharArray().reversed()
-        .foldIndexed(0L) { exp, acc, char ->
-            if (char !in snafuToDecMap.keys) {
-                error("unknown snafu $char in $this")
-            }
-            (acc + snafuToDecMap[char]!! * (5 pow exp))
-        }
+    toCharArray().reversed().foldIndexed(0L) { exp, acc, char ->
+        (acc + char.toSnafuDigit() * (5 pow exp))
+    }
 
 fun Long.toSnafu(): String {
     var value = this
-    var charsReversed = ""
+    val charsReversed = mutableListOf<Char>()
+
     while (value > 0) {
-        val current = (value % 5).toInt()
-        val remainder = (if (current > 2) (current - 5) else 0).toInt()
-        charsReversed += if (current > 2) decToSnafuMap[remainder] else decToSnafuMap[current]
-        val trans = (if (current > 2) -remainder else 0)
-        value = ((value + trans) / 5)
+        val current = (value % 5).toInt().toSnafuRemainder()
+        charsReversed.add(current.toSnafuChar())
+        // move the remainder to the next position
+        value = (value + (if (current < 0) -current else 0)) / 5
     }
-    return charsReversed.reversed()
+
+    return charsReversed.reversed().joinToString("")
 }
