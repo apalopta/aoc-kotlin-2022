@@ -1,3 +1,7 @@
+package day25
+
+import readInput
+
 fun main() {
     val inputToDec = readInput("Day25_test_toDec").drop(1)
         .map { it.trim().split(" +".toRegex()) }

@@ -1,3 +1,8 @@
+package day07
+
+import println
+import readInput
+
 open class File(val name: String, open val size: Long)
 
 class Dir(name: String, val parentDir: Dir?) : File(name, 0) {

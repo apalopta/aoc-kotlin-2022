@@ -1,3 +1,8 @@
+package day11
+
+import println
+import readSplitInput
+
 data class Monkey(
     val id: Int,
     val items: MutableList<Long>,

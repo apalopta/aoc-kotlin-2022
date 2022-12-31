@@ -1,3 +1,6 @@
+package day01
+
+import println
 import java.io.File
 
 fun main() {

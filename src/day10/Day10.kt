@@ -1,3 +1,8 @@
+package day10
+
+import println
+import readInput
+
 fun main() {
     fun calculateCycles(input: List<String>): IntArray {
         val noops = input.count { it == "noop" }

@@ -1,3 +1,7 @@
+package day25
+
+import println
+import readInput
 import kotlin.math.pow
 
 fun main() {
